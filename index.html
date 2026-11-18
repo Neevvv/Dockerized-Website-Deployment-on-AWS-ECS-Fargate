@@ -1,15 +1,475 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Automated AWS Deployment</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS ECS Fargate Deployment | Neev Panseriya</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background: #090e19;
+    color: #e5e7eb;
+    font-family: Arial, sans-serif;
+    line-height: 1.7;
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 22px 9%;
+    border-bottom: 1px solid #202a3b;
+}
+
+.logo {
+    color: #60a5fa;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+nav a {
+    color: #aab6c8;
+    text-decoration: none;
+    margin-left: 22px;
+    font-size: 14px;
+}
+
+nav a:hover {
+    color: #60a5fa;
+}
+
+.container {
+    width: 82%;
+    max-width: 1100px;
+    margin: auto;
+}
+
+.hero {
+    padding: 110px 0 85px;
+}
+
+.tag {
+    display: inline-block;
+    padding: 6px 14px;
+    background: #142b49;
+    color: #60a5fa;
+    border-radius: 20px;
+    font-size: 13px;
+    margin-bottom: 25px;
+}
+
+.hero h1 {
+    font-size: clamp(36px, 5vw, 58px);
+    line-height: 1.2;
+    max-width: 850px;
+    margin-bottom: 22px;
+}
+
+.hero h1 span {
+    color: #60a5fa;
+}
+
+.hero p {
+    color: #9ca9bc;
+    max-width: 700px;
+    font-size: 17px;
+    margin-bottom: 30px;
+}
+
+.btn {
+    display: inline-block;
+    background: #2563eb;
+    color: white;
+    padding: 12px 22px;
+    border-radius: 6px;
+    text-decoration: none;
+    margin-right: 10px;
+    font-size: 14px;
+}
+
+.btn.secondary {
+    background: transparent;
+    border: 1px solid #40516c;
+}
+
+section {
+    padding: 65px 0;
+    border-top: 1px solid #202a3b;
+}
+
+.section-title {
+    font-size: 29px;
+    margin-bottom: 15px;
+}
+
+.section-desc {
+    color: #9ca9bc;
+    margin-bottom: 30px;
+    max-width: 750px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.card {
+    background: #111a2a;
+    border: 1px solid #25344a;
+    border-radius: 10px;
+    padding: 23px;
+}
+
+.card h3 {
+    color: #60a5fa;
+    margin-bottom: 10px;
+    font-size: 17px;
+}
+
+.card p, .card li {
+    color: #aab6c8;
+    font-size: 14px;
+}
+
+.card ul {
+    padding-left: 18px;
+}
+
+.architecture {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 30px;
+}
+
+.arch-item {
+    background: #142b49;
+    border: 1px solid #31527a;
+    border-radius: 8px;
+    padding: 17px;
+    text-align: center;
+    min-width: 125px;
+}
+
+.arch-item strong {
+    display: block;
+    color: #60a5fa;
+    font-size: 14px;
+}
+
+.arch-item small {
+    color: #aab6c8;
+    font-size: 11px;
+}
+
+.arrow {
+    color: #60a5fa;
+    font-size: 22px;
+}
+
+.steps {
+    border-left: 2px solid #31527a;
+    padding-left: 25px;
+}
+
+.step {
+    margin-bottom: 28px;
+    position: relative;
+}
+
+.step h3 {
+    color: #60a5fa;
+    font-size: 17px;
+}
+
+.step p {
+    color: #aab6c8;
+    font-size: 14px;
+}
+
+footer {
+    text-align: center;
+    padding: 35px;
+    color: #77869c;
+    border-top: 1px solid #202a3b;
+    font-size: 13px;
+}
+
+@media(max-width: 750px) {
+    nav {
+        padding: 18px 6%;
+    }
+
+    nav a {
+        margin-left: 10px;
+        font-size: 12px;
+    }
+
+    .container {
+        width: 88%;
+    }
+
+    .hero {
+        padding: 75px 0;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .arrow {
+        transform: rotate(90deg);
+    }
+}
+</style>
 </head>
+
 <body>
-  <h1>My First Automated CI/CD Deployment!</h1>
-  <p>This website is hosted on Amazon EC2.</p>
-  <p>Deployed using a Bash script.</p>
+
+<nav>
+    <div class="logo">NEEV / CLOUD</div>
+    <div>
+        <a href="#about">About</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#technology">Technology</a>
+        <a href="#deployment">Deployment</a>
+    </div>
+</nav>
+
+<div class="container">
+
+<header class="hero">
+    <div class="tag">AWS CLOUD PROJECT · 2026</div>
+
+    <h1>
+        Dockerized Website Deployment
+        on <span>AWS ECS Fargate</span>
+    </h1>
+
+    <p>
+        A cloud deployment project demonstrating containerization,
+        serverless container hosting, automated CI/CD pipelines
+        and centralized application logging using AWS.
+    </p>
+
+    <a class="btn"
+       href="https://github.com/Neevvv/Dockerized-Website-Deployment-on-AWS-ECS-Fargate"
+       target="_blank">View GitHub Repository ↗</a>
+
+    <a class="btn secondary" href="#architecture">
+        Explore Architecture
+    </a>
+</header>
+
+<section id="about">
+    <h2 class="section-title">01. Project Overview</h2>
+
+    <p class="section-desc">
+        This project demonstrates how to deploy a Dockerized
+        static website on Amazon ECS using AWS Fargate.
+        It also implements an automated CI/CD pipeline using
+        GitHub Actions, allowing application updates to be
+        deployed automatically whenever code is pushed to GitHub.
+    </p>
+
+    <div class="grid">
+        <div class="card">
+            <h3>Containerization</h3>
+            <p>
+                Packaged a static website using Docker and
+                the official Apache HTTP Server image.
+            </p>
+        </div>
+
+        <div class="card">
+            <h3>Cloud Deployment</h3>
+            <p>
+                Hosted the Docker container using Amazon ECS
+                with AWS Fargate.
+            </p>
+        </div>
+
+        <div class="card">
+            <h3>Automation</h3>
+            <p>
+                Automated Docker image builds and ECS
+                deployments through GitHub Actions.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section id="architecture">
+    <h2 class="section-title">02. AWS Architecture</h2>
+
+    <p class="section-desc">
+        The following architecture represents the automated
+        application deployment workflow.
+    </p>
+
+    <div class="architecture">
+        <div class="arch-item">
+            <strong>GitHub</strong>
+            <small>Source Code</small>
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="arch-item">
+            <strong>GitHub Actions</strong>
+            <small>CI/CD Pipeline</small>
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="arch-item">
+            <strong>Amazon ECR</strong>
+            <small>Docker Images</small>
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="arch-item">
+            <strong>Amazon ECS</strong>
+            <small>Container Management</small>
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="arch-item">
+            <strong>Fargate</strong>
+            <small>Container Hosting</small>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top:25px">
+        <h3>CloudWatch Logging</h3>
+        <p>
+            Amazon CloudWatch Logs collects Apache container
+            output from the ECS task using the awslogs log driver.
+        </p>
+    </div>
+</section>
+
+<section id="technology">
+    <h2 class="section-title">03. Technologies Used</h2>
+
+    <div class="grid">
+        <div class="card">
+            <h3>Docker</h3>
+            <p>Containerized the website into a portable Docker image.</p>
+        </div>
+
+        <div class="card">
+            <h3>Amazon ECR</h3>
+            <p>Private container image registry for storing Docker images.</p>
+        </div>
+
+        <div class="card">
+            <h3>Amazon ECS</h3>
+            <p>Managed container orchestration and task deployments.</p>
+        </div>
+
+        <div class="card">
+            <h3>AWS Fargate</h3>
+            <p>Serverless compute engine for running containers.</p>
+        </div>
+
+        <div class="card">
+            <h3>IAM & OIDC</h3>
+            <p>Secure authentication and permissions for GitHub Actions.</p>
+        </div>
+
+        <div class="card">
+            <h3>CloudWatch</h3>
+            <p>Centralized container log collection and inspection.</p>
+        </div>
+    </div>
+</section>
+
+<section id="deployment">
+    <h2 class="section-title">04. Deployment Workflow</h2>
+
+    <p class="section-desc">
+        The deployment process is automated using GitHub Actions.
+        Every push to the main branch triggers the pipeline.
+    </p>
+
+    <div class="steps">
+        <div class="step">
+            <h3>01. Code Push</h3>
+            <p>Application changes are pushed to the GitHub main branch.</p>
+        </div>
+
+        <div class="step">
+            <h3>02. AWS Authentication</h3>
+            <p>GitHub Actions assumes an IAM role using OpenID Connect (OIDC).</p>
+        </div>
+
+        <div class="step">
+            <h3>03. Docker Build</h3>
+            <p>A new Docker image is built and tagged with the Git commit SHA.</p>
+        </div>
+
+        <div class="step">
+            <h3>04. Push to ECR</h3>
+            <p>The new Docker image is uploaded to Amazon ECR.</p>
+        </div>
+
+        <div class="step">
+            <h3>05. ECS Deployment</h3>
+            <p>The task definition is updated with the new image and deployed to Fargate.</p>
+        </div>
+
+        <div class="step">
+            <h3>06. CloudWatch Logging</h3>
+            <p>Container logs are collected in Amazon CloudWatch Logs.</p>
+        </div>
+    </div>
+</section>
+
+<section id="learnings">
+    <h2 class="section-title">05. Key Learnings</h2>
+
+    <div class="card">
+        <ul>
+            <li>Building and running Docker containers.</li>
+            <li>Working with private Amazon ECR repositories.</li>
+            <li>Deploying applications using ECS and Fargate.</li>
+            <li>Configuring IAM roles and OIDC authentication.</li>
+            <li>Building automated CI/CD pipelines.</li>
+            <li>Collecting and inspecting application logs using CloudWatch.</li>
+        </ul>
+    </div>
+</section>
+
+</div>
+
+<footer>
+    <p>Designed and deployed by Neev Panseriya</p>
+    <p>AWS Cloud Engineering Project · 2026</p>
+    <p>
+        <a href="https://github.com/Neevvv"
+           target="_blank"
+           style="color:#60a5fa;text-decoration:none">
+           GitHub Profile
+        </a>
+    </p>
+</footer>
+
 </body>
 </html>
-<!-- OIDC authentication test -->
-<!-- ECR permission test -->
